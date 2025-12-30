@@ -1,10 +1,5 @@
-#Client Folder
-Client/*.exe
-Client/*.bat
-
-#Server Folder
-Server/*.exe
-Server/*.bat
-
-#Others
-Backup
+logs
+build/bin
+frontend/package-lock.json
+frontend/package.json.md5
+THIRD_PARTY_LICENSES

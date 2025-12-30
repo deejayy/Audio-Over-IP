@@ -1,57 +1,111 @@
-# Realtime Audio over IP
-This package uses the following external dependencies:
-* [go-ole](https://github.com/go-ole/go-ole), which is licenced under an [MIT](https://github.com/go-ole/go-ole/blob/master/LICENSE) license.
-* [go-wav](https://github.com/moutend/go-wav), which is licenced under an [MIT](https://github.com/moutend/go-wav/blob/master/LICENSE) license.
-* [go-wca](https://github.com/moutend/go-wca), which is licenced under an [MIT](https://github.com/moutend/go-wca/blob/develop/LICENSE) license.
-* [fyne](https://github.com/fyne-io/fyne), which is licenced under an [BSD 3-Clause "New" or "Revised"](https://github.com/fyne-io/fyne/blob/master/LICENSE) license.
+# Audio Over IP
+
+Audio Over IP is a Windows application that allows you to stream raw[^1] system audio over the network with low latency.
+
+## Features
+
+- **Sender Mode (Server):** Broadcast your system's audio to multiple connected clients.
+- **Receiver Mode (Client):** Connect to one or multiple senders and play the audio through one or multiple playback devices at once.
+- **Audio Resampling:** Automatically handles sample rate conversion between different audio devices while offering multiple resampling algorithms to choose from.
+
+## Important Considerations
+
+### Security
+The audio stream is **not** encrypted. Do not use this software for transmitting sensitive audio data on untrusted networks.
+
+### Bandwidth
+
+Raw system audio can generate very high bitrates, so your network must be able to stream large amounts of data reliably in real time.
+
+**Example:**  
+Audio device configuration (e.g. SteelSeries Sonar - Gaming):
+- **Channels:** 8  
+- **Bit depth:** 24‑bit  
+- **Sample rate:** 96,000 Hz  
+
+**Important note:**  
+WASAPI always processes audio internally at **32‑bit**, so the actual captured format becomes:
+
+- **Channels:** 8  
+- **Bit depth:** 32‑bit  
+- **Sample rate:** 96,000 Hz  
+
+**Resulting Bandwidth Requirement:**  
+With only **one client** connected, the server already needs to transmit **more than 24 Mbit/s**.
 
 
-## What does it do?
-This program captures the system Audio of a Windows Computer and sends it to another Windows computer over the network in almost realtime.  
-**BEWARE:** The audio stream is not encrypted. If you plan to use this Software to send an audio stream over an untrusted network, such as the internet for example, you should use something like an SSH tunnel to encrypt the stream.  
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="./screenshots/receiver.png" width=""></td>
+    <td><img src="./screenshots/sender.png" width=""></td>
+  </tr>
+  <tr>
+    <td><img src="./screenshots/settings.png" width=""></td>
+    <td><img src="./screenshots/playbackDeviceSelector.png" width=""></td>
+  </tr>
+</table>
+
+## Installation (Using the prebuilt binaries)
+1. Download the the latest release here: [Releases](https://github.com/ElTheLedge/Audio-Over-IP/releases)
+2. Unzip the exe file to any location and run it
+3. Done. The app is a portable and self contained exe file with no installation required
+
+## Manual Compilation & Development
+
+### Prerequisites
+
+Since this application relies on the Windows Core Audio API (WASAPI), it is currently **Windows-only**.
+
+To build and run the project from source, you need:
+
+- **Go** (version 1.25 or later)
+- **Node.js** (version 22.21 or later + npm)
+- **Wails CLI**: Install it with `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+- **GCC Compiler**: Required for CGO (e.g., MinGW-w64)
+
+### Compiling the code
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/ElTheLedge/Audio-Over-IP.git
+    cd Audio-Over-IP
+    ```
+
+2.  **Check necessary wails dependencies:**
+    ```bash
+    # WebView2, Nodejs and npm need to appear with status "Installed"
+    wails doctor
+    ```
+
+3.  **Run in Development Mode:**
+    This will start the application with hot-reloading enabled for both backend and frontend.
+    ```bash
+    # The Wails CLI handles both Go and npm dependencies automatically
+    wails dev
+    ```
+
+4.  **Build for Production:**
+    To create a standalone `.exe` file:
+    ```bash
+    # The Wails CLI handles both Go and npm dependencies automatically
+    wails build
+    ```
+    The output binary will be located in the `build/bin` directory.
 
 
-## Usage
-Download the latest release and continue with "How to setup". There are no prerequisites when using the already compiled binary file.  
-If you want to however, you can also compile the code yourself as explained below.  
+## Tech Stack
 
+- **Backend:** Go (Golang)
+- **Frontend:** React, TypeScript, Vite
+- **UI Framework:** Tailwind CSS, shadcn/ui, radix-ui
+- **App Framework:** [Wails v2](https://wails.io/)
+- **Audio API:** Windows Core Audio API
+- **Networking:** Gorilla WebSocket
 
-### How to setup
-You have to put the client executable on the computer on which you want to play an audio stream, and the server executable has to be on the computer from which you want to stream the system audio.  
-You can then use the flags listed below to start the server and connect to it with a client.  
+## License
 
-### Flags you can use
-Client:
-* **-cli** : to start the client in cli mode
-    * **-e** : server address to connect to (ex: -e 127.0.0.1:4040), Has to be specified
-    * **-v** : displays more info about the stream and the audio setup  
+This Project is licensed under the [EUPL License](LICENSE)
 
-Server:  
-* **-p** : port to listen on
-
-### Limitations
-* Both devices have to use the same audio device settings (ex: 16 Bit, 48000 Hz), as there is no audio resampler implemented yet  
-* When the connection gets instable, the audio gets delayed by the amount of time the connection dropped  
-
-## Compilation
-### Prerequisites for compilation
-Go 1.16 (https://golang.org/dl/)  
-You'll get the rest when trying to compile  
-
-
-### How to compile
-You need to follow the next steps for each the server and the client:  
-Open a command prompt in the source directory and you should be able to install all dependencies by executing this command inside the source folder: 
-```sh
-go get -d ./...
-```
-Then simply type:
-```sh
-go build
-```
-It will then try to compile and tell you whether there are dependencies that are still missing.
-If so, you need to install them each like this for example: 
-```sh
-go get github.com/go-ole/go-ole
-```
-Then rerun "go build" and your executable should be compiled in the source directory.
+[^1]: "raw" as in 32-bit PCM (WAV formatted) Audio provided by the Windows Core Audio API
