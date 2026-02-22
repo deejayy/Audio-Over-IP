@@ -682,6 +682,43 @@ func InitDeviceMonitor() {
 				"id":    id,
 			})
 		}
+
+		// Handle device added: check if any connected server uses this device
+		if event == wcatools.DeviceAdded {
+			serversMu.Lock()
+			var serversToReconnect []string
+			for serverID, server := range servers {
+				// Only process if server is connected
+				if server.Status == connStatuses.Connected {
+					// Check if this device is in the server's playback devices
+					for _, device := range server.PlaybackDevices {
+						if device.DeviceID == id && device.Enabled {
+							serversToReconnect = append(serversToReconnect, serverID)
+							clientLogger.Infof("Device %s became available, will reconnect server %s", id, serverID)
+							break
+						}
+					}
+				}
+			}
+			serversMu.Unlock()
+
+			// Reconnect servers outside the lock to avoid deadlock
+			for _, serverID := range serversToReconnect {
+				go func(sid string) {
+					// Disconnect first
+					if err := DisconnectServer(sid); err != nil {
+						clientLogger.Errorf("Failed to disconnect server %s: %v", sid, err)
+						return
+					}
+					// Wait a bit for clean disconnection
+					time.Sleep(100 * time.Millisecond)
+					// Reconnect
+					if err := ConnectServer(sid); err != nil {
+						clientLogger.Errorf("Failed to reconnect server %s: %v", sid, err)
+					}
+				}(serverID)
+			}
+		}
 	})
 }
 
