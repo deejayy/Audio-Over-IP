@@ -1,14 +1,34 @@
 import Topbar from "./components/Topbar"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ClientPage from "./pages/ClientPage";
 import ServerPage from "./pages/ServerPage";
 import SettingsPage from "./pages/SettingsPage";
 import { Radio, Server, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
+import { GetLastActiveMode, SaveLastActiveMode } from "../wailsjs/go/main/App";
 
 function App() {
   const [activeTab, setActiveTab] = useState<"receiver" | "sender" | "settings">("receiver");
+
+  // Load the last active mode on startup
+  useEffect(() => {
+    GetLastActiveMode().then((mode) => {
+      if (mode === "receiver" || mode === "sender" || mode === "settings") {
+        setActiveTab(mode);
+      }
+    }).catch((err) => {
+      console.error("Failed to load last active mode:", err);
+    });
+  }, []);
+
+  // Save the mode whenever it changes
+  const handleTabChange = (newTab: "receiver" | "sender" | "settings") => {
+    setActiveTab(newTab);
+    SaveLastActiveMode(newTab).catch((err) => {
+      console.error("Failed to save last active mode:", err);
+    });
+  };
 
   return (
     <div className='flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden'>
@@ -22,13 +42,13 @@ function App() {
 
           <NavButton
             active={activeTab === "receiver"}
-            onClick={() => setActiveTab("receiver")}
+            onClick={() => handleTabChange("receiver")}
             icon={<Radio className="w-4 h-4 mr-2" />}
             label="Receiver"
           />
           <NavButton
             active={activeTab === "sender"}
-            onClick={() => setActiveTab("sender")}
+            onClick={() => handleTabChange("sender")}
             icon={<Server className="w-4 h-4 mr-2" />}
             label="Sender"
           />
@@ -36,7 +56,7 @@ function App() {
           <div className="mt-auto pt-4 border-t border-border">
             <NavButton
               active={activeTab === "settings"}
-              onClick={() => setActiveTab("settings")}
+              onClick={() => handleTabChange("settings")}
               icon={<Settings className="w-4 h-4 mr-2" />}
               label="Settings"
             />

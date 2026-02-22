@@ -42,12 +42,18 @@ type ClientConfig struct {
 	DefaultResampleOpts pcmresample.Options `json:"defaultResampleOpts"`
 }
 
+// AppSettings represents global application settings
+type AppSettings struct {
+	LastActiveMode string `json:"lastActiveMode"` // "receiver", "sender", or "settings"
+}
+
 const (
 	vendorName        = "deejayy"
 	appName           = "AudioOverIP"
 	serversConfigName = "Servers.json"
 	serverConfigName  = "ServerSettings.json"
 	clientConfigName  = "ClientSettings.json"
+	appSettingsName   = "AppSettings.json"
 )
 
 var (
@@ -64,6 +70,9 @@ var (
 			MaxThreads:          0, //0 = Auto
 			IncludeLFEInDownmix: true,
 		},
+	}
+	appSettings = AppSettings{
+		LastActiveMode: "receiver",
 	}
 )
 
@@ -90,6 +99,7 @@ func getFilePath(filename string) (string, error) {
 func LoadConfig() error {
 	_ = LoadServerConfig()
 	_ = LoadClientConfig()
+	_ = LoadAppSettings()
 
 	// Load Servers.json
 	path, err := getFilePath(serversConfigName)
@@ -236,6 +246,35 @@ func SaveClientConfig() error {
 		return err
 	}
 	path, err := getFilePath(clientConfigName)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
+}
+
+func LoadAppSettings() error {
+	path, err := getFilePath(appSettingsName)
+	if err != nil {
+		return err
+	}
+	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, &appSettings)
+}
+
+func SaveAppSettings() error {
+	configMu.Lock()
+	defer configMu.Unlock()
+	data, err := json.MarshalIndent(appSettings, "", "  ")
+	if err != nil {
+		return err
+	}
+	path, err := getFilePath(appSettingsName)
 	if err != nil {
 		return err
 	}

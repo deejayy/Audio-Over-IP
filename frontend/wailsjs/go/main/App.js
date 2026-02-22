@@ -38,6 +38,10 @@ export function GetConfigDir() {
   return window['go']['main']['App']['GetConfigDir']();
 }
 
+export function GetLastActiveMode() {
+  return window['go']['main']['App']['GetLastActiveMode']();
+}
+
 export function GetServerConfig() {
   return window['go']['main']['App']['GetServerConfig']();
 }
@@ -80,6 +84,10 @@ export function ReorderServers(arg1) {
 
 export function SaveClientConfig(arg1) {
   return window['go']['main']['App']['SaveClientConfig'](arg1);
+}
+
+export function SaveLastActiveMode(arg1) {
+  return window['go']['main']['App']['SaveLastActiveMode'](arg1);
 }
 
 export function SaveServerConfig(arg1) {

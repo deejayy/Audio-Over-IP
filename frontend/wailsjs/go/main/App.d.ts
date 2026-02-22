@@ -22,6 +22,8 @@ export function GetClientConfig():Promise<main.ClientConfig>;
 
 export function GetConfigDir():Promise<string>;
 
+export function GetLastActiveMode():Promise<string>;
+
 export function GetServerConfig():Promise<main.ServerConfig>;
 
 export function GetServerEnabled():Promise<boolean>;
@@ -43,6 +45,8 @@ export function RemoveServer(arg1:string):Promise<void>;
 export function ReorderServers(arg1:Array<string>):Promise<void>;
 
 export function SaveClientConfig(arg1:main.ClientConfig):Promise<void>;
+
+export function SaveLastActiveMode(arg1:string):Promise<void>;
 
 export function SaveServerConfig(arg1:main.ServerConfig):Promise<void>;
 

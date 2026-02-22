@@ -53,6 +53,19 @@ func (a *App) SaveClientConfig(cfg ClientConfig) error {
 	return SaveClientConfig()
 }
 
+func (a *App) GetLastActiveMode() string {
+	configMu.Lock()
+	defer configMu.Unlock()
+	return appSettings.LastActiveMode
+}
+
+func (a *App) SaveLastActiveMode(mode string) error {
+	configMu.Lock()
+	appSettings.LastActiveMode = mode
+	configMu.Unlock()
+	return SaveAppSettings()
+}
+
 func (a *App) GetConfigDir() string {
 	dir, _ := GetConfigDir()
 	return dir
