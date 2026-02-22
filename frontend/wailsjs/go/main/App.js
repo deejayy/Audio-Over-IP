@@ -30,6 +30,10 @@ export function EnableServer() {
   return window['go']['main']['App']['EnableServer']();
 }
 
+export function GetAppSettings() {
+  return window['go']['main']['App']['GetAppSettings']();
+}
+
 export function GetClientConfig() {
   return window['go']['main']['App']['GetClientConfig']();
 }
@@ -80,6 +84,10 @@ export function RemoveServer(arg1) {
 
 export function ReorderServers(arg1) {
   return window['go']['main']['App']['ReorderServers'](arg1);
+}
+
+export function SaveAppSettings(arg1) {
+  return window['go']['main']['App']['SaveAppSettings'](arg1);
 }
 
 export function SaveClientConfig(arg1) {

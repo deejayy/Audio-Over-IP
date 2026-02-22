@@ -3,9 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { FolderOpen, Github, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { GetServerConfig, SaveServerConfig, GetClientConfig, SaveClientConfig, OpenConfigDir, GetConfigDir } from "../../wailsjs/go/main/App";
+import { GetServerConfig, SaveServerConfig, GetClientConfig, SaveClientConfig, GetAppSettings, SaveAppSettings, OpenConfigDir, GetConfigDir } from "../../wailsjs/go/main/App";
 import { main, pcmresample } from "../../wailsjs/go/models";
 import { BrowserOpenURL } from "../../wailsjs/runtime/runtime";
 import { ResampleSettings } from "@/components/ResampleSettings";
@@ -18,6 +19,10 @@ export default function SettingsPage() {
             Method: 2, Quality: 20, MaxQuality: 100, MaxThreads: 0, IncludeLFEInDownmix: true
         })
     }));
+    const [appSettings, setAppSettings] = useState(new main.AppSettings({
+        lastActiveMode: "receiver",
+        autoStartBroadcasting: false
+    }));
     const [configPath, setConfigPath] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -25,6 +30,7 @@ export default function SettingsPage() {
         GetConfigDir().then(setConfigPath);
         GetServerConfig().then(c => setServerCfg(new main.ServerConfig(c)));
         GetClientConfig().then(c => setClientCfg(new main.ClientConfig(c)));
+        GetAppSettings().then(c => setAppSettings(new main.AppSettings(c)));
     }, []);
 
     const handleSaveServer = async () => {
@@ -56,6 +62,18 @@ export default function SettingsPage() {
         }
     };
 
+    const handleSaveAppSettings = async () => {
+        setLoading(true);
+        try {
+            await SaveAppSettings(appSettings);
+            toast({ title: "Settings Saved", description: "Application settings updated." });
+        } catch (e: any) {
+            toast({ variant: "destructive", title: "Error", description: e.toString() });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="flex flex-col space-y-6 h-full w-full">
             <div>
@@ -71,6 +89,35 @@ export default function SettingsPage() {
                 </TabsList>
 
                 <TabsContent value="general" className="space-y-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Startup Behavior</CardTitle>
+                            <CardDescription>Configure how the application behaves on startup.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <label htmlFor="auto-start-broadcasting" className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        Auto-start Broadcasting
+                                    </label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Automatically enable sender mode when the application starts
+                                    </p>
+                                </div>
+                                <Switch
+                                    id="auto-start-broadcasting"
+                                    checked={appSettings.autoStartBroadcasting}
+                                    onCheckedChange={(checked) => {
+                                        setAppSettings(new main.AppSettings({ ...appSettings, autoStartBroadcasting: checked }))
+                                    }}
+                                />
+                            </div>
+                            <Button onClick={handleSaveAppSettings} disabled={loading}>
+                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save Changes
+                            </Button>
+                        </CardContent>
+                    </Card>
                     <Card>
                         <CardHeader>
                             <CardTitle>Configuration Storage</CardTitle>

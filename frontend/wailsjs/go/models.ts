@@ -1,5 +1,19 @@
 export namespace main {
 	
+	export class AppSettings {
+	    lastActiveMode: string;
+	    autoStartBroadcasting: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new AppSettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.lastActiveMode = source["lastActiveMode"];
+	        this.autoStartBroadcasting = source["autoStartBroadcasting"];
+	    }
+	}
 	export class ClientConfig {
 	    defaultResampleOpts: pcmresample.Options;
 	

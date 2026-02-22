@@ -66,6 +66,19 @@ func (a *App) SaveLastActiveMode(mode string) error {
 	return SaveAppSettings()
 }
 
+func (a *App) GetAppSettings() AppSettings {
+	configMu.Lock()
+	defer configMu.Unlock()
+	return appSettings
+}
+
+func (a *App) SaveAppSettings(settings AppSettings) error {
+	configMu.Lock()
+	appSettings = settings
+	configMu.Unlock()
+	return SaveAppSettings()
+}
+
 func (a *App) GetConfigDir() string {
 	dir, _ := GetConfigDir()
 	return dir
@@ -100,6 +113,15 @@ func (a *App) startup(ctx context.Context) {
 		go func(id string) {
 			_ = ReconnectServer(id)
 		}(s.ID)
+	}
+
+	// Auto-start broadcasting if enabled
+	configMu.Lock()
+	autoStart := appSettings.AutoStartBroadcasting
+	configMu.Unlock()
+
+	if autoStart {
+		a.EnableServer()
 	}
 }
 

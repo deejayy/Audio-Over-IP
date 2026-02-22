@@ -18,6 +18,8 @@ export function DisconnetFromAudioServer(arg1:string):Promise<void>;
 
 export function EnableServer():Promise<void>;
 
+export function GetAppSettings():Promise<main.AppSettings>;
+
 export function GetClientConfig():Promise<main.ClientConfig>;
 
 export function GetConfigDir():Promise<string>;
@@ -43,6 +45,8 @@ export function RemovePlaybackDevice(arg1:string,arg2:string):Promise<void>;
 export function RemoveServer(arg1:string):Promise<void>;
 
 export function ReorderServers(arg1:Array<string>):Promise<void>;
+
+export function SaveAppSettings(arg1:main.AppSettings):Promise<void>;
 
 export function SaveClientConfig(arg1:main.ClientConfig):Promise<void>;
 

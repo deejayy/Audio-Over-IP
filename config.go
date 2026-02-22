@@ -44,7 +44,8 @@ type ClientConfig struct {
 
 // AppSettings represents global application settings
 type AppSettings struct {
-	LastActiveMode string `json:"lastActiveMode"` // "receiver", "sender", or "settings"
+	LastActiveMode        string `json:"lastActiveMode"`        // "receiver", "sender", or "settings"
+	AutoStartBroadcasting bool   `json:"autoStartBroadcasting"` // Auto-start server mode on app launch
 }
 
 const (
@@ -72,7 +73,8 @@ var (
 		},
 	}
 	appSettings = AppSettings{
-		LastActiveMode: "receiver",
+		LastActiveMode:        "receiver",
+		AutoStartBroadcasting: false,
 	}
 )
 
