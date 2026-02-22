@@ -211,11 +211,18 @@ function SortableServerCard({ server }: { server: main.Server }) {
                 </CardHeader>
 
                 <CardContent className="pb-3 flex-1">
-                    <div className="flex items-center text-xs text-muted-foreground gap-2">
-                        <Wifi className={`w-3 h-3 ${isConnected ? "text-green-500" : "opacity-50"}`} />
-                        {isConnected ? "Streaming Active" : (server.Online ? "Ready to connect" : "Host Unreachable")}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground gap-2">
+                        <div className="flex items-center gap-2">
+                            <Wifi className={`w-3 h-3 ${isConnected ? "text-green-500" : "opacity-50"}`} />
+                            {isConnected ? "Streaming Active" : (server.Online ? "Ready to connect" : "Host Unreachable")}
+                        </div>
+                        {isConnected && server.bandwidth > 0 && (
+                            <span className="text-xs font-mono text-muted-foreground">
+                                {server.bandwidth} kbps
+                            </span>
+                        )}
                     </div>
-                    <p className="text-xs text-destructive mt-2 font-medium">{(server.Status !== "Idle" && server.Status !== "Connected") ? server.Status : " "}</p>
+                    <p className="text-xs text-destructive mt-2 font-medium">{(server.Status !== "Idle" && server.Status !== "Connected") ? server.Status : " "}</p>
                 </CardContent>
 
                 <CardFooter className="flex justify-between pt-3 border-t border-border/50 bg-muted/20">

@@ -87,6 +87,7 @@ export namespace main {
 	    ResampleOpts: pcmresample.Options;
 	    PlaybackDevices: PlaybackDevice[];
 	    AudioConfig: wcatools.AudioConfig;
+	    bandwidth: number;
 	    RemoteDeviceID: string;
 	    RemoteDevices: wcatools.AudioConfig[];
 	
@@ -104,6 +105,7 @@ export namespace main {
 	        this.ResampleOpts = this.convertValues(source["ResampleOpts"], pcmresample.Options);
 	        this.PlaybackDevices = this.convertValues(source["PlaybackDevices"], PlaybackDevice);
 	        this.AudioConfig = this.convertValues(source["AudioConfig"], wcatools.AudioConfig);
+	        this.bandwidth = source["bandwidth"];
 	        this.RemoteDeviceID = source["RemoteDeviceID"];
 	        this.RemoteDevices = this.convertValues(source["RemoteDevices"], wcatools.AudioConfig);
 	    }

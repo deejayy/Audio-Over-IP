@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"AuOvIP/pcmresample"
@@ -30,6 +31,7 @@ type Server struct {
 	ResampleOpts    pcmresample.Options
 	PlaybackDevices []PlaybackDevice
 	AudioConfig     wcatools.AudioConfig
+	Bandwidth       int `json:"bandwidth"` // Bandwidth in kbps
 
 	RemoteDeviceID string
 	RemoteDevices  []wcatools.AudioConfig
@@ -43,9 +45,10 @@ type Server struct {
 	infoCancel context.CancelFunc
 
 	// Runtime state
-	players     map[string]*DevicePlayer // Map Key: DeviceID (or "default")
-	playersMu   sync.Mutex
-	distributor *AudioDistributor
+	players       map[string]*DevicePlayer // Map Key: DeviceID (or "default")
+	playersMu     sync.Mutex
+	distributor   *AudioDistributor
+	bytesReceived uint64 // Atomic counter for bytes received
 }
 
 type settingsRequest struct {
@@ -249,6 +252,9 @@ func audioStartup(s *Server) {
 				readErrCh <- err
 				return
 			}
+
+			// Track bytes received
+			atomic.AddUint64(&s.bytesReceived, uint64(len(m)))
 
 			// Broadcast audio data to all players
 			s.distributor.Broadcast(m)
@@ -599,7 +605,9 @@ func ListServers() []Server {
 	out := make([]Server, 0, len(servers))
 	for _, id := range serverOrder {
 		if s, ok := servers[id]; ok {
-			out = append(out, *s)
+			// Create a copy with current bandwidth
+			serverCopy := *s
+			out = append(out, serverCopy)
 		}
 	}
 	if len(out) != len(servers) {
@@ -607,10 +615,46 @@ func ListServers() []Server {
 		out = make([]Server, 0, len(servers))
 		for id, s := range servers {
 			serverOrder = append(serverOrder, id)
-			out = append(out, *s)
+			serverCopy := *s
+			out = append(out, serverCopy)
 		}
 	}
 	return out
+}
+
+// clientBandwidthUpdater periodically calculates bandwidth for each connected client
+func clientBandwidthUpdater() {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		serversMu.Lock()
+		updated := false
+		for _, s := range servers {
+			if s.Status == connStatuses.Connected {
+				// Get current bytes and reset counter atomically
+				bytesReceived := atomic.SwapUint64(&s.bytesReceived, 0)
+				// Calculate kbps (bytes per second * 8 / 1000)
+				kbps := int((bytesReceived * 8) / 1000)
+				if s.Bandwidth != kbps {
+					s.Bandwidth = kbps
+					updated = true
+				}
+			} else {
+				// Reset bandwidth if not connected
+				if s.Bandwidth != 0 {
+					s.Bandwidth = 0
+					updated = true
+				}
+			}
+		}
+		serversMu.Unlock()
+
+		// Emit update if any bandwidth changed
+		if updated && app != nil && app.ctx != nil {
+			wRuntime.EventsEmit(app.ctx, "serversUpdated", ListServers())
+		}
+	}
 }
 
 func ReconnectServer(id string) error {

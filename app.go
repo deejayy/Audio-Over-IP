@@ -130,6 +130,7 @@ func (a App) domReady(ctx context.Context) {
 	//Start connection status frontend updater
 	go connStatusUpdater()
 	go serverStatsUpdater()
+	go clientBandwidthUpdater()
 }
 
 // beforeClose is called when the application is about to quit,
