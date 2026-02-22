@@ -44,6 +44,20 @@ export namespace main {
 		    return a;
 		}
 	}
+	export class ConnectedClient {
+	    remoteAddr: string;
+	    hostname: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ConnectedClient(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.remoteAddr = source["remoteAddr"];
+	        this.hostname = source["hostname"];
+	    }
+	}
 	export class PlaybackDevice {
 	    deviceID: string;
 	    name: string;

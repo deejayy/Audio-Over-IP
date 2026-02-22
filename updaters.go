@@ -60,6 +60,12 @@ type ServerStats struct {
 	Bandwidth        int `json:"bandwidth"` // in kbps
 }
 
+// ConnectedClient represents a connected client's information
+type ConnectedClient struct {
+	RemoteAddr string `json:"remoteAddr"`
+	Hostname   string `json:"hostname"`
+}
+
 // serverStats is a channel for ServerStats updates.
 var serverStats = make(chan ServerStats, 10)
 

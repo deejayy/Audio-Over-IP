@@ -42,6 +42,10 @@ export function GetConfigDir() {
   return window['go']['main']['App']['GetConfigDir']();
 }
 
+export function GetConnectedClients() {
+  return window['go']['main']['App']['GetConnectedClients']();
+}
+
 export function GetLastActiveMode() {
   return window['go']['main']['App']['GetLastActiveMode']();
 }

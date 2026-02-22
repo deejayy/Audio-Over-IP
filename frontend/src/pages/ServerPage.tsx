@@ -1,10 +1,11 @@
 import { Switch } from "@/components/ui/switch"
 import { useEffect, useState } from "react"
 import { EventsOff, EventsOn } from "../../wailsjs/runtime/runtime";
-import { DisableServer, EnableServer, GetServerConfig, GetServerEnabled } from "../../wailsjs/go/main/App";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DisableServer, EnableServer, GetServerConfig, GetServerEnabled, GetConnectedClients } from "../../wailsjs/go/main/App";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Activity, Users, Radio, Power } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { main } from "../../wailsjs/go/models";
 
 interface ServerStats {
     connectedClients: number;
@@ -14,7 +15,17 @@ interface ServerStats {
 function ServerPage() {
     const [isServerOn, setIsServerOn] = useState(false);
     const [serverStats, setServerStats] = useState<ServerStats>({ connectedClients: 0, bandwidth: 0 });
-    const [listenPort, setListenPort] = useState("8080")
+    const [listenPort, setListenPort] = useState("8080");
+    const [connectedClients, setConnectedClients] = useState<main.ConnectedClient[]>([]);
+
+    const fetchConnectedClients = async () => {
+        try {
+            const clients = await GetConnectedClients();
+            setConnectedClients(clients);
+        } catch (e) {
+            console.error("Failed to fetch connected clients:", e);
+        }
+    };
 
     useEffect(() => {
         GetServerConfig().then((conf)=> {
@@ -28,10 +39,16 @@ function ServerPage() {
         });
         EventsOn("updateServerStats", (stats: ServerStats) => {
             setServerStats(stats);
+            // Fetch connected clients when stats update
+            fetchConnectedClients();
         });
         EventsOn("updateServerPagePortDisplay", (port: string) => {
             setListenPort(port);
         });
+        
+        // Initial fetch of connected clients if server is on
+        fetchConnectedClients();
+        
         return () => {
             EventsOff("updateServerStatus", "updateServerStats");
         };
@@ -108,6 +125,39 @@ function ServerPage() {
                     desc="Listening Port"
                 />
             </div>
+
+            {/* Connected Clients List */}
+            {serverStats.connectedClients > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Connected Clients</CardTitle>
+                        <CardDescription>Currently receiving audio stream</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            {connectedClients.map((client, index) => (
+                                <div 
+                                    key={index}
+                                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                                >
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-sm">
+                                            {client.hostname || "Unknown"}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {client.remoteAddr}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                        <span className="text-xs text-muted-foreground">Connected</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     );
 }

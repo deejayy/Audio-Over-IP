@@ -32,10 +32,12 @@ var serverCtl struct {
 
 // websocket clients (single port for HTTP + audio streaming)
 type wsClient struct {
-	conn      *websocket.Conn
-	sendCh    chan []byte
-	deviceID  string
-	bytesSent uint64
+	conn       *websocket.Conn
+	sendCh     chan []byte
+	deviceID   string
+	bytesSent  uint64
+	remoteAddr string
+	hostname   string
 }
 
 var wsClients = make(map[int]*wsClient)
@@ -221,6 +223,21 @@ func broadcastInfo() {
 	}
 }
 
+// GetConnectedClients returns a list of currently connected clients
+func GetConnectedClients() []ConnectedClient {
+	wsClientsMu.Lock()
+	defer wsClientsMu.Unlock()
+
+	clients := make([]ConnectedClient, 0, len(wsClients))
+	for _, client := range wsClients {
+		clients = append(clients, ConnectedClient{
+			RemoteAddr: client.remoteAddr,
+			Hostname:   client.hostname,
+		})
+	}
+	return clients
+}
+
 func startServing(ctx context.Context, listenPort string) {
 	doneServing := false
 	defer func() {
@@ -357,14 +374,20 @@ func startServing(ctx context.Context, listenPort string) {
 		wsClientsMu.Lock()
 		id := nextWSID
 		nextWSID++
+
+		// Extract hostname if available, otherwise use empty string
+		hostname := r.URL.Query().Get("hostname")
+
 		cl := &wsClient{
-			conn:     conn,
-			sendCh:   make(chan []byte, 80),
-			deviceID: requestedDeviceID,
+			conn:       conn,
+			sendCh:     make(chan []byte, 80),
+			deviceID:   requestedDeviceID,
+			remoteAddr: r.RemoteAddr,
+			hostname:   hostname,
 		}
 		wsClients[id] = cl
 		wsClientsMu.Unlock()
-		serverLogger.Infof("registered ws client id=%d remote=%s device=%s", id, r.RemoteAddr, requestedDeviceID)
+		serverLogger.Infof("registered ws client id=%d remote=%s hostname=%s device=%s", id, r.RemoteAddr, hostname, requestedDeviceID)
 
 		// Add to CaptureManager
 		captureManager.mu.Lock()

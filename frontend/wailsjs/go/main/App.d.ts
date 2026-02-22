@@ -24,6 +24,8 @@ export function GetClientConfig():Promise<main.ClientConfig>;
 
 export function GetConfigDir():Promise<string>;
 
+export function GetConnectedClients():Promise<Array<main.ConnectedClient>>;
+
 export function GetLastActiveMode():Promise<string>;
 
 export function GetServerConfig():Promise<main.ServerConfig>;

@@ -426,6 +426,10 @@ func (a *App) GetServerEnabled() bool {
 	return serverIsOn
 }
 
+func (a *App) GetConnectedClients() []ConnectedClient {
+	return GetConnectedClients()
+}
+
 func (a *App) EnableServer() {
 	serverIsOn = true
 	wRuntime.EventsEmit(a.ctx, "updateServerStatus", serverIsOn)

@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"sync"
 	"time"
 
@@ -181,6 +182,9 @@ func audioStartup(s *Server) {
 	u := url.URL{Scheme: "ws", Host: s.Addr, Path: "/audio"}
 	q := u.Query()
 	q.Set("deviceID", remoteDeviceID)
+	// Send local hostname to identify this client
+	hostname, _ := os.Hostname()
+	q.Set("hostname", hostname)
 	u.RawQuery = q.Encode()
 
 	var wsConn *websocket.Conn
