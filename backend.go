@@ -45,10 +45,12 @@ type Server struct {
 	infoCancel context.CancelFunc
 
 	// Runtime state
-	players       map[string]*DevicePlayer // Map Key: DeviceID (or "default")
-	playersMu     sync.Mutex
-	distributor   *AudioDistributor
-	bytesReceived uint64 // Atomic counter for bytes received
+	players           map[string]*DevicePlayer // Map Key: DeviceID (or "default")
+	playersMu         sync.Mutex
+	distributor       *AudioDistributor
+	bytesReceived     uint64    // Atomic counter for bytes received
+	lastDataTimestamp time.Time // Last time data was received
+	connectionTime    time.Time // When connection was established
 }
 
 type settingsRequest struct {
@@ -232,6 +234,12 @@ func audioStartup(s *Server) {
 
 	connStatus <- ConnStatusMessage{ServerID: s.ID, StatusText: connStatuses.Connected}
 
+	// Set connection time for watchdog
+	serversMu.Lock()
+	s.connectionTime = time.Now()
+	s.lastDataTimestamp = time.Now()
+	serversMu.Unlock()
+
 	readErrCh := make(chan error, 1)
 
 	go func() {
@@ -255,6 +263,11 @@ func audioStartup(s *Server) {
 
 			// Track bytes received
 			atomic.AddUint64(&s.bytesReceived, uint64(len(m)))
+
+			// Update last data timestamp
+			serversMu.Lock()
+			s.lastDataTimestamp = time.Now()
+			serversMu.Unlock()
 
 			// Broadcast audio data to all players
 			s.distributor.Broadcast(m)
@@ -623,14 +636,22 @@ func ListServers() []Server {
 }
 
 // clientBandwidthUpdater periodically calculates bandwidth for each connected client
+// and implements a watchdog to detect stalled streams
 func clientBandwidthUpdater() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
+	const (
+		gracePeriod    = 5 * time.Second // Grace period after connection before watchdog activates
+		watchdogPeriod = 3 * time.Second // Time with zero bandwidth before triggering reconnect
+	)
+
 	for range ticker.C {
 		serversMu.Lock()
 		updated := false
-		for _, s := range servers {
+		var serversToReconnect []string
+
+		for serverID, s := range servers {
 			if s.Status == connStatuses.Connected {
 				// Get current bytes and reset counter atomically
 				bytesReceived := atomic.SwapUint64(&s.bytesReceived, 0)
@@ -639,6 +660,19 @@ func clientBandwidthUpdater() {
 				if s.Bandwidth != kbps {
 					s.Bandwidth = kbps
 					updated = true
+				}
+
+				// Watchdog: Check if stream has stalled
+				timeSinceConnection := time.Since(s.connectionTime)
+				timeSinceLastData := time.Since(s.lastDataTimestamp)
+
+				// Only activate watchdog after grace period
+				if timeSinceConnection > gracePeriod {
+					// If no data received for watchdogPeriod, trigger reconnect
+					if timeSinceLastData > watchdogPeriod {
+						clientLogger.Warnf("Watchdog: No data received from %s for %v, will reconnect", s.Addr, timeSinceLastData)
+						serversToReconnect = append(serversToReconnect, serverID)
+					}
 				}
 			} else {
 				// Reset bandwidth if not connected
@@ -653,6 +687,24 @@ func clientBandwidthUpdater() {
 		// Emit update if any bandwidth changed
 		if updated && app != nil && app.ctx != nil {
 			wRuntime.EventsEmit(app.ctx, "serversUpdated", ListServers())
+		}
+
+		// Reconnect stalled servers outside the lock
+		for _, serverID := range serversToReconnect {
+			go func(sid string) {
+				clientLogger.Infof("Watchdog: Reconnecting server %s due to stalled stream", sid)
+				// Disconnect first
+				if err := DisconnectServer(sid); err != nil {
+					clientLogger.Errorf("Watchdog: Failed to disconnect server %s: %v", sid, err)
+					return
+				}
+				// Wait a bit for clean disconnection
+				time.Sleep(100 * time.Millisecond)
+				// Reconnect
+				if err := ConnectServer(sid); err != nil {
+					clientLogger.Errorf("Watchdog: Failed to reconnect server %s: %v", sid, err)
+				}
+			}(serverID)
 		}
 	}
 }
