@@ -43,7 +43,7 @@ type ClientConfig struct {
 }
 
 const (
-	vendorName        = "ElTheLedge"
+	vendorName        = "deejayy"
 	appName           = "AudioOverIP"
 	serversConfigName = "Servers.json"
 	serverConfigName  = "ServerSettings.json"

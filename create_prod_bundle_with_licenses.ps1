@@ -138,7 +138,7 @@ foreach ($line in $NpmLicenses) {
     $Repo = $parts[2].Trim('"')
 
     # Skip internal package
-    if ($Module -eq "@eltheledge/audio-over-ip_frontend@0.0.0") {
+    if ($Module -eq "@deejayy/audio-over-ip_frontend@0.0.0") {
         Write-Host "Skipping internal package: $Module"
         continue
     }

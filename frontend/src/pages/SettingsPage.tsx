@@ -91,8 +91,8 @@ export default function SettingsPage() {
                             <CardDescription>Check the GitHub for updates</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <Button className="" onClick={() => { BrowserOpenURL("https://github.com/ElTheLedge/Audio-Over-IP") }}>
-                                <Github className="mr-1" />@ElTheLedge/Audio-Over-IP
+                            <Button className="" onClick={() => { BrowserOpenURL("https://github.com/deejayy/Audio-Over-IP") }}>
+                                <Github className="mr-1" />@deejayy/Audio-Over-IP
                             </Button>
                         </CardContent>
                     </Card>

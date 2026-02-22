@@ -48,7 +48,7 @@ With only **one client** connected, the server already needs to transmit **more 
 </table>
 
 ## Installation (Using the prebuilt binaries)
-1. Download the the latest release here: [Releases](https://github.com/ElTheLedge/Audio-Over-IP/releases)
+1. Download the the latest release here: [Releases](https://github.com/deejayy/Audio-Over-IP/releases)
 2. Unzip the exe file to any location and run it
 3. Done. The app is a portable and self contained exe file with no installation required
 
@@ -69,7 +69,7 @@ To build and run the project from source, you need:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/ElTheLedge/Audio-Over-IP.git
+    git clone https://github.com/deejayy/Audio-Over-IP.git
     cd Audio-Over-IP
     ```
 

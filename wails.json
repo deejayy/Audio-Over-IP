@@ -7,14 +7,14 @@
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
   "author": {
-    "name": "ElTheLedge",
+    "name": "deejayy",
     "email": ""
   },
   "info": {
-    "companyName": "ElTheLedge",
+    "companyName": "deejayy",
     "productName": "Audio-Over-IP",
-    "productVersion": "0.9.0",
-    "copyright": "",
-    "comments": ""
+    "productVersion": "0.9.1",
+    "copyright": "(c) ElTheLedge (some changes by deejayy)",
+    "comments": "forked from ElTheLedge/Audio-Over-IP"
   }
 }
