@@ -48,7 +48,9 @@ func connStatusUpdater() {
 		// Emit the per-server status update
 		wRuntime.EventsEmit(app.ctx, "updateConnStatus", msg)
 
-		wRuntime.EventsEmit(app.ctx, "serversUpdated", ListServers())
+		servers := ListServers()
+		wRuntime.EventsEmit(app.ctx, "serversUpdated", servers)
+		app.notifyTrayServerListChanged(servers)
 	}
 }
 

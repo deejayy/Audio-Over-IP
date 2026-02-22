@@ -431,7 +431,9 @@ func maintainInfoConnection(ctx context.Context, s *Server, conn *websocket.Conn
 			s.Online = false
 		}
 		serversMu.Unlock()
-		wRuntime.EventsEmit(app.ctx, "serversUpdated", ListServers())
+		servers := ListServers()
+		wRuntime.EventsEmit(app.ctx, "serversUpdated", servers)
+		app.notifyTrayServerListChanged(servers)
 	}()
 
 	ticker := time.NewTicker(2 * time.Second)
@@ -486,7 +488,9 @@ func maintainInfoConnection(ctx context.Context, s *Server, conn *websocket.Conn
 				}
 			}
 			serversMu.Unlock()
-			wRuntime.EventsEmit(app.ctx, "serversUpdated", ListServers())
+			servers := ListServers()
+			wRuntime.EventsEmit(app.ctx, "serversUpdated", servers)
+			app.notifyTrayServerListChanged(servers)
 		}
 	}()
 
